@@ -1,59 +1,120 @@
-import API_KEY as key
 import logging
 
-from telegram import Update, ForceReply
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
+from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove, Update
+from telegram.ext import (
+    Updater,
+    CommandHandler,
+    MessageHandler,
+    Filters,
+    ConversationHandler,
+    CallbackContext,
+)
 
-# Enable logging
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO
 )
 
 logger = logging.getLogger(__name__)
 
+USERTYPE, DESTINATION1, REGION, DESTINATION2, ITINERARY = range(5)
 
-# Define a few command handlers. These usually take the two arguments update and
-# context.
-def start(update, context):
-    """Send a message when the command /start is issued."""
-    update.message.reply_text("Welcome to TraveLater! Are you a tourist or a business owner?\n/1 For Tourists \n/2 For Business Owners")
+def start(update: Update, _: CallbackContext) -> int:
+    reply_keyboard = [["Tourist", "Business Owner"]]
 
-def help_command(update, context):
-    """Send a message when the command /help is issued."""
-    update.message.reply_text('Type /start to get started and we will take care of the rest!')
+    update.message.reply_text(
+        "Welcome to TraveLater! Are you a tourist or a business owner?",
+        reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True),
+    )
 
-def echo(update, context):
-    """Echo the user message."""
-    update.message.reply_text(update.message.text)
+    return USERTYPE
 
-def tourist_step_1(update, context):
-    """The /1 command"""
-    update.message.reply_text("Hello traveller! Do you have any specific holiday destinations in mind?\n/1 Yes\n/2 No")
+def usertype(update: Update, _: CallbackContext) -> int:
+    user = update.message.from_user
+    logger.info("%s", update.message.text)
+    reply_keyboard = [["Yes", "No"]]
+
+    update.message.reply_text(
+        "Hello traveller! Do you have any specific holiday destinations in mind?",
+        reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True),
+    )
+
+    return DESTINATION1
+
+def destination1(update: Update, _: CallbackContext) -> int:
+    user = update.message.from_user
+    logger.info("%s", update.message.text)
+    reply_keyboard = [["Africa"], ["Asia"], ["Australia"], ["Europe"], ["North America"],
+                      ["South America"],["Recommend something for me"]]
+
+    update.message.reply_text(
+        "No worries! Do you have a region that you want to visit?",
+        reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True),
+    )
+
+    return REGION
+
+def region(update: Update, _: CallbackContext) -> int:
+    user = update.message.from_user
+    logger.info("%s", update.message.text)
+    reply_keyboard = [["Bali", "Egypt", "Japan", "San Francisco", "Switzerland"]]
+
+    update.message.reply_text(
+        "Here are some trending holiday destinations among our users!",
+        reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True),
+    )
+
+    return DESTINATION2
+
+def destination2(update: Update, _: CallbackContext) -> int:
+    user = update.message.from_user
+    logger.info("%s", update.message.text)
+    reply_keyboard = [["Select this itinerary", "Find out more", "Show me another itinerary"]]
+
+    update.message.reply_text(
+        "Here is the most popular itinerary among our users that have visited the country:"
+        "\n"
+        "\nBest of Switzerland"
+        "\nExperience all of Switzerland as you visit places from farms to the urban city!",
+        reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True),
+    )
+
+    return ITINERARY
+
+def cancel(update: Update, _: CallbackContext) -> int:
+    user = update.message.from_user
+    logger.info("User %s canceled the conversation.", user.first_name)
+    update.message.reply_text(
+        'Bye! I hope we can talk again some day.', reply_markup=ReplyKeyboardRemove()
+    )
+
+    return ConversationHandler.END
 
 def main() -> None:
-    """Start the bot."""
-    # Create the Updater and pass it your bot's token.
-    updater = Updater(key.API_KEY)
+    updater = Updater("1812880044:AAF2Yjx5HopPKZu35TM5xO_dx096qJJUB8w")
 
-    # Get the dispatcher to register handlers
     dispatcher = updater.dispatcher
 
-    # on different commands - answer in Telegram
-    dispatcher.add_handler(CommandHandler("start", start))
-    dispatcher.add_handler(CommandHandler("help", help_command))
-    dispatcher.add_handler(CommandHandler("1", tourist_step_1))
+    conv_handler = ConversationHandler(
+        entry_points=[CommandHandler("start", start)],
+        states={
+            USERTYPE: [MessageHandler(Filters.regex("^(Tourist|Business Owner)$"), usertype)],
+            DESTINATION1: [MessageHandler(Filters.regex("^(Yes|No)$"),
+                                          destination1)],
+            REGION: [MessageHandler(Filters.regex("^(Africa|Asia|Australia|Europe|North America|"
+                                                        "South America|Recommend something for me)$"),
+                                    region)],
+            DESTINATION2: [MessageHandler(Filters.regex("^(Bali|Egypt|Japan|San Francisco|Switzerland)$"),
+                                          destination2)],
+        },
+        fallbacks=[CommandHandler("cancel", cancel)],
+    )
 
-    # on non command i.e message - echo the message on Telegram
-    dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, echo))
+    dispatcher.add_handler(conv_handler)
 
-    # Start the Bot
     updater.start_polling()
 
-    # Run the bot until you press Ctrl-C or the process receives SIGINT,
-    # SIGTERM or SIGABRT. This should be used most of the time, since
-    # start_polling() is non-blocking and will stop the bot gracefully.
     updater.idle()
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
+
