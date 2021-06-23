@@ -190,7 +190,7 @@ def biz_edit2(update: Update, _: CallbackContext) -> int:
     text = update.message.text
     logger.info("%s", text)
     edit_field.append(text) # field to be edited added to list
-    update.message.reply_text(f"You would like to edit the {text} field? Sure thing! Just send me the new information"
+    update.message.reply_text(f"You would like to edit the {text} field? Sure thing! Just send me the new information "
                               f"to be saved under that field.")
     return BIZ_EDIT3
 
@@ -250,7 +250,7 @@ def biz_remove2(update: Update, _: CallbackContext) -> int:
                       ["Edit an itinerary", "Remove an itinerary"], ["/done"]]
     if text == "Yes":
         mycol.delete_one({"_id": edit_field[0]})
-        update.message.reply_text("We have successfully removed that tour. What else would you like to do?",
+        update.message.reply_text("That tour has successfully been removed. What else would you like to do?",
                                   reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
     else:
         update.message.reply_text("What else would you like to do?",
