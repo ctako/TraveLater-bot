@@ -323,25 +323,74 @@ def region(update: Update, _: CallbackContext) -> int:
         return REC_DESTINATION2
 
     else:
+        myquery = {"Region": text}
+        results = mycol.find(myquery)
+        results_lst = []
+        for result in results:
+            results_lst.append(result)
+
+        table = []
+        row = []
+        for result in results_lst:
+            country = result.get("Country")
+            if len(row) < 2:
+                row.append(country)
+            else:
+                dup_row = copy.deepcopy(row)
+                table.append(dup_row)
+                row.clear()
+                row.append(country)
+        table.append(row)
+        reply_keyboard = table
         update.message.reply_text(
-            f"Here are some popular destinations for {text}. You can select them to find out more!"
+            f"Here are some popular destinations for {text}. You can select them to find out more!",
+            reply_markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True),
         )
         return REC_DESTINATION2
 
 def destination2(update: Update, _: CallbackContext) -> int:
     text = update.message.text
     logger.info("%s", text)
-    reply_keyboard = [["Select this itinerary"], ["Find out more"], ["Show me another itinerary"]]
+    #reply_keyboard = [["Select this itinerary"], ["Find out more"], ["Show me another itinerary"]]
 
+    myquery = {"Country": text}
+    results = mycol.find(myquery)
+    results_lst = []
+    for result in results:
+        results_lst.append(result)
+
+    table = []
+    row = []
+    for result in results_lst:
+        tour_name = result.get("Tour name")
+        if len(row) < 2:
+            row.append(tour_name)
+        else:
+            dup_row = copy.deepcopy(row)
+            table.append(dup_row)
+            row.clear()
+            row.append(tour_name)
+    table.append(row)
+    reply_keyboard = table
     update.message.reply_text(
-        f"Here is the most popular itinerary among our users that have visited the {text}:"
-        "\n"
-        f"\nBest of {text}"
-        f"\nExperience all of {text} as you visit places from farms to the urban city!",
+        f"Here are some itineraries for {text}:",
         reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True),
     )
 
     return TOURIST_VIEW_ITINERARY
+
+def tourist_view(update: Update, _: CallbackContext) -> int:
+    text = update.message.text
+    logger.info("%s", text)
+    myquery = {"Tour name": text}
+    result = mycol.find(myquery)
+    description = result.get("Description")
+    print(description)
+    reply_keyboard = [["Select this itinerary"], ["Go back"]]
+    update.message.reply_text(
+        f"test",
+        reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True),
+    )
 
 def done(update: Update, _: CallbackContext) -> int:
     user = update.message.from_user
@@ -366,8 +415,9 @@ def main() -> None:
                                               destination1)],
             REC_REGION: [MessageHandler(Filters.regex("^(Africa|Asia|Australia|Europe|North America|"
                                                         "South America|Recommend something for me)$"), region)],
-            REC_DESTINATION2: [MessageHandler(Filters.regex("^(Bali|Egypt|Japan|San Francisco|Switzerland)$"),
+            REC_DESTINATION2: [MessageHandler(Filters.text & ~Filters.command,
                                               destination2)],
+            TOURIST_VIEW_ITINERARY: [MessageHandler(Filters.regex("^(Select this itinerary|Go back)$"), tourist_view)],
             BIZ_OPTIONS1: [MessageHandler(Filters.regex("^(View my itineraries|Add an itinerary|Edit an itinerary|"
                                                              "Remove an itinerary)$"), biz_options1)],
             BIZ_VIEW: [MessageHandler(Filters.text & ~Filters.command, biz_view)],
