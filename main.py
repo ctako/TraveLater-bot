@@ -336,8 +336,12 @@ def region(update: Update, _: CallbackContext) -> int:
         row = []
         for result in results_lst:
             country = result.get("Country")
-            if len(row) < 2:
+            if country in row:
+                continue
+
+            elif len(row) < 2:
                 row.append(country)
+
             else:
                 dup_row = copy.deepcopy(row)
                 table.append(dup_row)
@@ -403,7 +407,7 @@ def tourist_view(update: Update, _: CallbackContext) -> int:
 
     reply_keyboard = [["Select this itinerary"], ["Go back"]]
     update.message.reply_text(
-        f"Company: {company}\n{text}:\n{description}",
+        f"*Company:* {company}\n*{text}:*\n{description}", parse_mode= "Markdown",
         reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True),
     )
 
@@ -474,7 +478,7 @@ def done(update: Update, _: CallbackContext) -> int:
     return ConversationHandler.END
 
 def main() -> None:
-    updater = Updater("1812880044:AAF2Yjx5HopPKZu35TM5xO_dx096qJJUB8w")
+    updater = Updater("1819142055:AAFEWaUSAn7RZGFQ8qBMFXVqvAlqfspOn2A")
 
     dispatcher = updater.dispatcher
 
