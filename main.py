@@ -25,9 +25,9 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 USERTYPE, REC_DESTINATION1, BIZ_OPTIONS1, CUSTOM_COUNTRY, REC_REGION, \
-REC_DESTINATION2, TOURIST_VIEW_ITINERARY, BIZ_VIEW, ADD_COMPANY_NAME, ADD_REGION, \
+REC_DESTINATION2, TOURIST_VIEW_ITINERARY, TOURIST_SELECT_ITINERARY, BIZ_VIEW, ADD_COMPANY_NAME, ADD_REGION, \
 ADD_COUNTRY, ADD_TOUR_NAME, ADD_DESCRIPTION, NEW_ITINERARY_ADDED, NO_ITINERARY, \
-BIZ_EDIT1, BIZ_EDIT2, BIZ_EDIT3, BIZ_REMOVE1, BIZ_REMOVE2 = range(20)
+BIZ_EDIT1, BIZ_EDIT2, BIZ_EDIT3, BIZ_REMOVE1, BIZ_REMOVE2 = range(21)
 
 def start(update: Update, _: CallbackContext) -> int:
     reply_keyboard = [["Tourist"], ["Business Owner"]]
@@ -392,6 +392,21 @@ def tourist_view(update: Update, _: CallbackContext) -> int:
         reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True),
     )
 
+    return TOURIST_SELECT_ITINERARY
+
+def tourist_select(update: Update, _: CallbackContext) -> int:
+    text = update.message.text
+    logger.info("%s", text)
+    if text == "Select this itinerary":
+        update.message.reply_text(
+            "Goodbye! I hope I managed to assist you and that we can talk again some day.",
+            reply_markup=ReplyKeyboardRemove()
+        )
+        return ConversationHandler.END
+
+    else:
+        return TOURIST_VIEW_ITINERARY
+
 def done(update: Update, _: CallbackContext) -> int:
     user = update.message.from_user
     logger.info("User %s ended the conversation.", user.first_name)
@@ -418,6 +433,7 @@ def main() -> None:
             REC_DESTINATION2: [MessageHandler(Filters.text & ~Filters.command,
                                               destination2)],
             TOURIST_VIEW_ITINERARY: [MessageHandler(Filters.regex("^(Select this itinerary|Go back)$"), tourist_view)],
+            TOURIST_SELECT_ITINERARY: [MessageHandler(Filters.text & ~Filters.command, tourist_select)],
             BIZ_OPTIONS1: [MessageHandler(Filters.regex("^(View my itineraries|Add an itinerary|Edit an itinerary|"
                                                              "Remove an itinerary)$"), biz_options1)],
             BIZ_VIEW: [MessageHandler(Filters.text & ~Filters.command, biz_view)],
