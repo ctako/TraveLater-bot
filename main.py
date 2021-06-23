@@ -7,6 +7,9 @@ mydb = myclient["mydatabase"]
 mycol = mydb["itineraries"]
 mydict = {} # for biz adding itinerary
 edit_field = [] # for biz edit and remove itinerary
+selected_user = "" # to store username
+itineraries= []
+country = ""
 
 from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove, Update
 from telegram.ext import (
@@ -25,15 +28,15 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 USERTYPE, REC_DESTINATION1, BIZ_OPTIONS1, CUSTOM_COUNTRY, REC_REGION, \
-REC_DESTINATION2, TOURIST_VIEW_ITINERARY, TOURIST_SELECT_ITINERARY, BIZ_VIEW, ADD_COMPANY_NAME, ADD_REGION, \
+REC_DESTINATION2, TOURIST_VIEW_ITINERARY, TOURIST_SELECT_ITINERARY, CUSTOM_COUNTRY, BIZ_VIEW, ADD_COMPANY_NAME, ADD_REGION, \
 ADD_COUNTRY, ADD_TOUR_NAME, ADD_DESCRIPTION, NEW_ITINERARY_ADDED, NO_ITINERARY, \
-BIZ_EDIT1, BIZ_EDIT2, BIZ_EDIT3, BIZ_REMOVE1, BIZ_REMOVE2 = range(21)
+BIZ_EDIT1, BIZ_EDIT2, BIZ_EDIT3, BIZ_REMOVE1, BIZ_REMOVE2 = range(22)
 
 def start(update: Update, _: CallbackContext) -> int:
     reply_keyboard = [["Tourist"], ["Business Owner"]]
 
     update.message.reply_text(
-        "Hello, I am TraveLaterBot! I can recommend you tours for places that you might be interested in if you are a"
+        "Hello, I am TraveLaterBot! I can recommend you tours for places that you might be interested in if you are a "
         "tourist, or help you advertise your tours if you are business owner. Are you a tourist or a business owner?"
         "\n \n"
         "You can select the /done button or type \"/done\" anytime you wish to terminate the conversation",
@@ -372,6 +375,10 @@ def destination2(update: Update, _: CallbackContext) -> int:
             row.append(tour_name)
     table.append(row)
     reply_keyboard = table
+    global country
+    country = text
+    global itineraries
+    itineraries = table
     update.message.reply_text(
         f"Here are some itineraries for {text}:",
         reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True),
@@ -383,12 +390,20 @@ def tourist_view(update: Update, _: CallbackContext) -> int:
     text = update.message.text
     logger.info("%s", text)
     myquery = {"Tour name": text}
-    result = mycol.find(myquery)
-    description = result.get("Description")
-    print(description)
+    results = mycol.find(myquery)
+    results_lst = []
+    for result in results:
+        results_lst.append(result)
+
+    for i in results_lst:
+        description = i.get("Description")
+        global selected_user
+        selected_user = i.get("Username")
+        company = i.get("Company")
+
     reply_keyboard = [["Select this itinerary"], ["Go back"]]
     update.message.reply_text(
-        f"test",
+        f"Company: {company}\n{text}:\n{description}",
         reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True),
     )
 
@@ -399,13 +414,54 @@ def tourist_select(update: Update, _: CallbackContext) -> int:
     logger.info("%s", text)
     if text == "Select this itinerary":
         update.message.reply_text(
-            "Goodbye! I hope I managed to assist you and that we can talk again some day.",
+            f"Here is the Telegram handle for the person-in-charge. Please contact him for more details!\n@{selected_user}",
             reply_markup=ReplyKeyboardRemove()
         )
         return ConversationHandler.END
 
     else:
+        global country
+        global itineraries
+        reply_keyboard = itineraries
+        update.message.reply_text(
+            f"Here are some itineraries for {country}:",
+            reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True),
+        )
+
         return TOURIST_VIEW_ITINERARY
+
+def custom_country(update: Update, _: CallbackContext) -> int:
+    text = update.message.text
+    logger.info("%s", text)
+    myquery = {"Country": text}
+    results = mycol.find(myquery)
+    results_lst = []
+    for result in results:
+        results_lst.append(result)
+
+    table = []
+    row = []
+    for result in results_lst:
+        tour_name = result.get("Tour name")
+        if len(row) < 2:
+            row.append(tour_name)
+        else:
+            dup_row = copy.deepcopy(row)
+            table.append(dup_row)
+            row.clear()
+            row.append(tour_name)
+    table.append(row)
+    reply_keyboard = table
+    global country
+    country = text
+    global itineraries
+    itineraries = table
+    update.message.reply_text(
+        f"Here are some itineraries for {text}:",
+        reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True),
+    )
+
+    return TOURIST_VIEW_ITINERARY
 
 def done(update: Update, _: CallbackContext) -> int:
     user = update.message.from_user
@@ -432,8 +488,9 @@ def main() -> None:
                                                         "South America|Recommend something for me)$"), region)],
             REC_DESTINATION2: [MessageHandler(Filters.text & ~Filters.command,
                                               destination2)],
-            TOURIST_VIEW_ITINERARY: [MessageHandler(Filters.regex("^(Select this itinerary|Go back)$"), tourist_view)],
-            TOURIST_SELECT_ITINERARY: [MessageHandler(Filters.text & ~Filters.command, tourist_select)],
+            TOURIST_SELECT_ITINERARY: [MessageHandler(Filters.regex("^(Select this itinerary|Go back)$"), tourist_select)],
+            TOURIST_VIEW_ITINERARY: [MessageHandler(Filters.text & ~Filters.command, tourist_view)],
+            CUSTOM_COUNTRY: [MessageHandler(Filters.text & ~Filters.command, custom_country)],
             BIZ_OPTIONS1: [MessageHandler(Filters.regex("^(View my itineraries|Add an itinerary|Edit an itinerary|"
                                                              "Remove an itinerary)$"), biz_options1)],
             BIZ_VIEW: [MessageHandler(Filters.text & ~Filters.command, biz_view)],
