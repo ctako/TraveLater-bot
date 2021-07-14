@@ -29,7 +29,8 @@ logger = logging.getLogger(__name__)
 USERTYPE, REC_DESTINATION1, BIZ_MAIN_MENU, CUSTOM_COUNTRY, REC_REGION, \
 REC_DESTINATION2, TOURIST_VIEW, TOURIST_SELECT, BIZ_VIEW1, BIZ_VIEW2, ADD_COMPANY_NAME, ADD_REGION, \
 ADD_COUNTRY, ADD_TOUR_NAME, ADD_BUDGET, ADD_DURATION, ADD_DESCRIPTION, NEW_ITINERARY_ADDED, BIZ_NO_ITINERARY, \
-BIZ_EDIT1, BIZ_EDIT2, BIZ_EDIT3, BIZ_EDIT4, BIZ_REMOVE1, BIZ_REMOVE2, TOURIST_NO_ITINERARY = range(26)
+BIZ_EDIT1, BIZ_EDIT2, BIZ_EDIT3, BIZ_EDIT4, BIZ_REMOVE1, BIZ_REMOVE2, TOURIST_NO_ITINERARY, REC_SOMETHING, \
+REC_SOMETHING_BUDGET, REC_SOMETHING_BUDGET_VIEW, REC_SOMETHING_BUDGET_SELECT = range(30)
 
 def start(update: Update, _: CallbackContext) -> int:
     reply_keyboard = [["Tourist", "Business Owner"]]
@@ -378,49 +379,50 @@ def add_company_name(update: Update, _: CallbackContext) -> int:
     text = update.message.text
     logger.info("%s", text)
     mydict["Company"] = text
-    update.message.reply_text(f"Your company name is {text}. Next, please tell me the region your tour will be held in "
-                              f"(eg. Asia, Europe etc).")
+    update.message.reply_text(f"Your company name is *{text}*. Next, please tell me the region your tour will be held in "
+                              f"(eg. Asia, Europe etc).", parse_mode="Markdown")
     return ADD_REGION
 
 def add_region(update: Update, _: CallbackContext) -> int:
     text = update.message.text
     logger.info("%s", text)
     mydict["Region"] = text
-    update.message.reply_text(f"Your tour will be held in {text}. Next, please tell me which country your tour will be "
-                              f"held in.")
+    update.message.reply_text(f"Your tour will be held in *{text}*. Next, please tell me which country your tour will be "
+                              f"held in.", parse_mode="Markdown")
     return ADD_COUNTRY
 
 def add_country(update: Update, _: CallbackContext) -> int:
     text = update.message.text
     logger.info("%s", text)
     mydict["Country"] = text
-    update.message.reply_text(f"Your tour will be held in {text}. Next, please tell me the name of your tour.")
+    update.message.reply_text(f"Your tour will be held in *{text}*. Next, please tell me the name of your tour.",
+                              parse_mode="Markdown")
     return ADD_TOUR_NAME
 
 def add_tour_name(update: Update, _: CallbackContext) -> int:
     text = update.message.text
     logger.info("%s", text)
     mydict["Tour name"] = text
-    update.message.reply_text(f"The name of your tour is {text}. Next, please give me an estimate on the budget of your"
-                              f" tour per pax in USD.")
+    update.message.reply_text(f"The name of your tour is *{text}*. Next, please give me an estimate on the budget of your"
+                              f" tour per pax in USD.", parse_mode="Markdown")
     return ADD_BUDGET
 
 def add_budget(update: Update, _: CallbackContext) -> int:
     text = update.message.text
     logger.info("%s", text)
     mydict["Budget per pax (in USD)"] = int(text)
-    update.message.reply_text(f"The estimated budget of your tour per pax is USD{text}. Next, please give me the "
-                              f"duration of your tour in days.")
+    update.message.reply_text(f"The estimated budget of your tour per pax is *USD{text}*. Next, please give me the "
+                              f"duration of your tour in days.", parse_mode="Markdown")
     return ADD_DURATION
 
 def add_duration(update: Update, _: CallbackContext) -> int:
     text = update.message.text
     logger.info("%s", text)
     mydict["Duration (in days)"] = int(text)
-    update.message.reply_text(f"The duration of your tour will be {text} days. Lastly, please give me a description of "
+    update.message.reply_text(f"The duration of your tour will be *{text}* days. Lastly, please give me a description of "
                               f"your tour. We suggest including information such as places that the tourists will be "
                               f"visiting, how many hours are allocated for tourists to visit each place, meals that "
-                              f"the tourists will be having etc.")
+                              f"the tourists will be having etc.", parse_mode="Markdown")
     return ADD_DESCRIPTION
 
 def add_description(update: Update, _: CallbackContext) -> int:
@@ -450,39 +452,10 @@ def rec_region(update: Update, _: CallbackContext) -> int:
     logger.info("%s", text)
 
     if text == "Recommend something for me":
-        for doc in mycol.find():
-            if doc.get("Country") not in mydict:
-                mydict[doc.get("Country")] = 0
-        for doc in mycol.find():
-            value = mydict.get(doc.get("Country"))
-            mydict[doc.get("Country")] = value + 1
-
-        newdict = dict(sorted(mydict.items(), key=lambda item: item[1], reverse=True))
-        mydict.clear()
-        top4 = []
-        for country in newdict.keys():
-            while len(top4) < 4 and country not in top4:
-                top4.append(country)
-        top4.sort()
-        table = []
-        row = []
-        for country in top4:
-            if len(row) < 2:
-                row.append(country)
-
-            else:
-                dup_row = copy.deepcopy(row)
-                table.append(dup_row)
-                row.clear()
-                row.append(country)
-        table.append(row)
-        reply_keyboard = table
-
-        update.message.reply_text(
-            "Here are some trending holiday destinations among our users!",
-            reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True),
-        )
-        return REC_DESTINATION2
+        reply_keyboard = [["Popularity", "Budget"]]
+        update.message.reply_text("Would you like to search for itineraries based on their popularity or based on their "
+                                  "budget?", reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+        return REC_SOMETHING
 
     else:
         myquery = {"Region": text}
@@ -664,6 +637,136 @@ def tourist_no_itinerary(update: Update, _: CallbackContext) -> int:
         )
         return REC_REGION
 
+def rec_something(update: Update, _: CallbackContext) -> int:
+    text = update.message.text
+    logger.info("%s", text)
+
+    if text == "Popularity":
+        for doc in mycol.find():
+            if doc.get("Country") not in mydict:
+                mydict[doc.get("Country")] = 0
+        for doc in mycol.find():
+            value = mydict.get(doc.get("Country"))
+            mydict[doc.get("Country")] = value + 1
+        newdict = dict(sorted(mydict.items(), key=lambda item: item[1], reverse=True))
+        mydict.clear()
+        top4 = []
+        for country in newdict.keys():
+            while len(top4) < 4 and country not in top4:
+                top4.append(country)
+        top4.sort()
+        table = []
+        row = []
+        for country in top4:
+            if len(row) < 2:
+                row.append(country)
+
+            else:
+                dup_row = copy.deepcopy(row)
+                table.append(dup_row)
+                row.clear()
+                row.append(country)
+        table.append(row)
+        reply_keyboard = table
+
+        update.message.reply_text(
+            "Here are some trending holiday destinations among our users. You can select them to find out more.",
+            reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True),
+        )
+        return REC_DESTINATION2
+
+    elif text == "Budget":
+        update.message.reply_text("Please state your maximum budget per pax in USD. We will search for tours that are "
+                                  "within your budget.")
+        return REC_SOMETHING_BUDGET
+
+def rec_something_budget(update: Update, _: CallbackContext) -> int:
+    text = update.message.text
+    logger.info("%s", text)
+    text = int(text)
+    logger.info("%s", text)
+    myquery = {"Budget per pax (in USD)": {"$lte": text}}
+    results = mycol.find(myquery)
+    results_lst = []
+    for result in results:
+        results_lst.append(result)
+
+    if len(results_lst) == 0:
+        reply_keyboard = [["Popularity", "Budget"]]
+        update.message.reply_text("Unfortunately, we could not find any tours that fit within your budget. You can "
+                                  "instead choose to search for tours based on their popularity or increase your "
+                                  "budget. Would you like to search based on popularity or based on budget?",
+                                  reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+        return REC_SOMETHING
+
+    else:
+        table = []
+        row = []
+        sorting = []
+        for doc in results_lst:
+            sorting.append(doc.get("Tour name"))
+        sorting.sort()
+        for tour_name in sorting:
+            if len(row) < 2:
+                row.append(tour_name)
+
+            else:
+                dup_row = copy.deepcopy(row)
+                table.append(dup_row)
+                row.clear()
+                row.append(tour_name)
+        table.append(row)
+        reply_keyboard = table
+        global itineraries
+        itineraries = reply_keyboard
+
+        update.message.reply_text(
+            "Here are the tours that fit within your budget. You can select them to find out more.",
+            reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True),
+        )
+        return REC_SOMETHING_BUDGET_VIEW
+
+def rec_something_budget_view(update: Update, _: CallbackContext) -> int:
+    text = update.message.text
+    logger.info("%s", text)
+    myquery = {"Tour name": text}
+    result = mycol.find_one(myquery)
+    global selected_user
+    selected_user = result.get("Username")
+    s = ""
+    for key in result:
+        if key == "_id" or key == "Username":
+            continue
+        else:
+            s += "*" + key + ":* " + str(result.get(key)) + "\n"
+    reply_keyboard = [["Select this itinerary", "Go back"]]
+    update.message.reply_text(
+        f"Here are the details on {text}:\n"
+        f"{s}", parse_mode="Markdown",
+        reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True),
+    )
+    return REC_SOMETHING_BUDGET_SELECT
+
+def rec_something_budget_select(update: Update, _: CallbackContext) -> int:
+    text = update.message.text
+    logger.info("%s", text)
+    if text == "Select this itinerary":
+        update.message.reply_text(
+            f"Here is the Telegram handle for the person-in-charge. Please contact him for more details!\n@{selected_user}",
+            reply_markup=ReplyKeyboardRemove()
+        )
+        return ConversationHandler.END
+
+    elif text == "Go back":
+        global itineraries
+        reply_keyboard = itineraries
+        update.message.reply_text(
+            f"Here are the tours that fit your budget. You can select them to find out more.",
+            reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True),
+        )
+
+        return REC_SOMETHING_BUDGET_VIEW
+
 def done(update: Update, _: CallbackContext) -> int:
     user = update.message.from_user
     logger.info("User %s ended the conversation.", user.first_name)
@@ -687,6 +790,11 @@ def main() -> None:
                                               rec_destination1)],
             REC_REGION: [MessageHandler(Filters.regex("^(Africa|Asia|Australia|Europe|North America|"
                                                         "South America|Recommend something for me)$"), rec_region)],
+            REC_SOMETHING: [MessageHandler(Filters.regex("^(Popularity|Budget)$"), rec_something)],
+            REC_SOMETHING_BUDGET: [MessageHandler(Filters.text & ~Filters.command, rec_something_budget)],
+            REC_SOMETHING_BUDGET_VIEW: [MessageHandler(Filters.text & ~Filters.command, rec_something_budget_view)],
+            REC_SOMETHING_BUDGET_SELECT: [MessageHandler(Filters.regex("^(Select this itinerary|Go back)$"),
+                                                         rec_something_budget_select)],
             REC_DESTINATION2: [MessageHandler(Filters.text & ~Filters.command,
                                               rec_destination2)],
             TOURIST_SELECT: [MessageHandler(Filters.regex("^(Select this itinerary|Go back)$"), tourist_select)],
