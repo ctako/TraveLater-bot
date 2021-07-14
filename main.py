@@ -7,7 +7,7 @@ mydb = myclient["mydatabase"]
 mycol = mydb["itineraries"]
 mydict = {} # for biz adding, edit and remove itinerary
 selected_user = "" # to store username
-itineraries = []
+itineraries = [] #for "go back" button
 country = ""
 
 from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove, Update
