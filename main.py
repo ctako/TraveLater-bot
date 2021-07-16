@@ -40,7 +40,7 @@ def start(update: Update, _: CallbackContext) -> int:
         "tourist, or help you advertise your tours if you are business owner. Are you a tourist or a business owner?"
         "\n \n"
         "You can select the /done button or type \"/done\" anytime you wish to terminate the conversation",
-        reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True),
+        reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, resize_keyboard=True),
     )
 
     return USERTYPE
@@ -53,7 +53,7 @@ def usertype(update: Update, _: CallbackContext) -> int:
         reply_keyboard = [["Yes", "No"]]
         update.message.reply_text(
             "Welcome traveller! Do you have a specific country that you wish to visit?",
-            reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True),
+            reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, resize_keyboard=True),
         )
         return REC_DESTINATION1
 
@@ -62,7 +62,7 @@ def usertype(update: Update, _: CallbackContext) -> int:
                           ["Edit an itinerary", "Remove an itinerary"], ["/done"]]
         update.message.reply_text(
             "Hello business owner! What would you like to do today?",
-            reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True),
+            reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, resize_keyboard=True),
         )
         return BIZ_MAIN_MENU
 
@@ -80,7 +80,7 @@ def rec_destination1(update: Update, _: CallbackContext) -> int:
 
         update.message.reply_text(
             "No worries! Do you have a region that you want to visit?",
-            reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True),
+            reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, resize_keyboard=True),
         )
         return REC_REGION
 
@@ -101,7 +101,7 @@ def biz_main_menu(update: Update, _: CallbackContext) -> int:
 
             update.message.reply_text(
                 "Currently, you do not have any itineraries saved with us. Would you like to add one?",
-                reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True),
+                reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, resize_keyboard=True),
             )
             return BIZ_NO_ITINERARY
 
@@ -129,21 +129,21 @@ def biz_main_menu(update: Update, _: CallbackContext) -> int:
             if text == "View my itineraries":
                 update.message.reply_text(
                     "Which itinerary would you like to view?",
-                    reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True),
+                    reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, resize_keyboard=True),
                 )
                 return BIZ_VIEW1
 
             elif text == "Edit an itinerary":
                 update.message.reply_text(
                     "Which itinerary would you like to edit?",
-                    reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True),
+                    reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, resize_keyboard=True),
                 )
                 return BIZ_EDIT1
 
             elif text == "Remove an itinerary":
                 update.message.reply_text(
                     "Which itinerary would you like to remove?",
-                    reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True),
+                    reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, resize_keyboard=True),
                 )
                 return BIZ_REMOVE1
 
@@ -177,7 +177,7 @@ def biz_view1(update: Update, _: CallbackContext) -> int:
         f"Here is the information we have saved on {text}. \n \n"
         f"{s} \n"
         f"What else would you like to do?", parse_mode= 'Markdown',
-        reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+        reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, resize_keyboard=True))
     return BIZ_VIEW2
 
 def biz_view2(update: Update, _: CallbackContext) -> int:
@@ -212,7 +212,7 @@ def biz_view2(update: Update, _: CallbackContext) -> int:
         reply_keyboard = table
         update.message.reply_text(
             "Which itinerary would you like to view?",
-            reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True),
+            reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, resize_keyboard=True),
         )
         return BIZ_VIEW1
 
@@ -221,7 +221,7 @@ def biz_view2(update: Update, _: CallbackContext) -> int:
                           ["Edit an itinerary", "Remove an itinerary"], ["/done"]]
         update.message.reply_text(
             "What else would you like to do?",
-            reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True),
+            reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, resize_keyboard=True),
         )
         return BIZ_MAIN_MENU
 
@@ -244,7 +244,7 @@ def biz_edit1(update: Update, _: CallbackContext) -> int:
         f"Here is the information we have saved on {text}. \n \n"
         f"{s} \n"
         f"Which field would you like to edit?", parse_mode='Markdown',
-        reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+        reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, resize_keyboard=True))
     return BIZ_EDIT2
 
 def biz_edit2(update: Update, _: CallbackContext) -> int:
@@ -283,7 +283,7 @@ def biz_edit3(update: Update, _: CallbackContext) -> int:
         f"Here is the updated {mydict.get('Tour name')}. \n \n"
         f"{s} \n"
         f"What else would you like to do?", parse_mode='Markdown',
-        reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+        reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, resize_keyboard=True))
     return BIZ_EDIT4
 
 def biz_edit4(update: Update, _: CallbackContext) -> int:
@@ -318,7 +318,7 @@ def biz_edit4(update: Update, _: CallbackContext) -> int:
         reply_keyboard = table
         update.message.reply_text(
             "Which itinerary would you like to edit?",
-            reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True),
+            reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, resize_keyboard=True),
         )
         return BIZ_EDIT1
 
@@ -326,16 +326,16 @@ def biz_edit4(update: Update, _: CallbackContext) -> int:
         reply_keyboard = [["Company", "Region"], ["Country", "Tour name"],
                           ["Budget per pax (in USD)", "Duration (in days)"], ["Website", "Description"]]
         update.message.reply_text("Which field would you like to edit?",
-                                  reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True),
-                                  )
+                                  reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True,
+                                                                   resize_keyboard=True),)
         return BIZ_EDIT2
 
     elif text == "Back to main menu":
         reply_keyboard = [["View my itineraries", "Add an itinerary"],
                           ["Edit an itinerary", "Remove an itinerary"], ["/done"]]
         update.message.reply_text("What else would you like to do?",
-                                  reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True),
-                                  )
+                                  reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True,
+                                                                   resize_keyboard=True),)
         mydict.clear()
         return BIZ_MAIN_MENU
 
@@ -357,7 +357,7 @@ def biz_remove1(update: Update, _: CallbackContext) -> int:
         f"Here is the information we have saved on {text}. \n \n"
         f"{s} \n"
         f"Are you sure you want to remove it?", parse_mode='Markdown',
-        reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+        reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, resize_keyboard=True))
     return BIZ_REMOVE2
 
 def biz_remove2(update: Update, _: CallbackContext) -> int:
@@ -368,10 +368,12 @@ def biz_remove2(update: Update, _: CallbackContext) -> int:
     if text == "Yes":
         mycol.delete_one({"_id": mydict.get("_id")})
         update.message.reply_text("That tour has successfully been removed. What else would you like to do?",
-                                  reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+                                  reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True,
+                                                                   resize_keyboard=True))
     else:
         update.message.reply_text("What else would you like to do?",
-                                  reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+                                  reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True,
+                                                                   resize_keyboard=True))
     mydict.clear()
     return BIZ_MAIN_MENU
 
@@ -451,7 +453,7 @@ def add_description(update: Update, _: CallbackContext) -> int:
         "And you're done! Here's what you sent me. \n \n"
         f"{s} \n"
         f"What else would you like to do?", parse_mode= 'Markdown',
-        reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+        reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, resize_keyboard=True))
     mycol.insert_one(mydict)
     mydict.clear()
     return BIZ_MAIN_MENU
@@ -463,7 +465,8 @@ def rec_region(update: Update, _: CallbackContext) -> int:
     if text == "Recommend something for me":
         reply_keyboard = [["Popularity", "Budget"]]
         update.message.reply_text("Would you like to search for itineraries based on their popularity or based on their "
-                                  "budget?", reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+                                  "budget?", reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True,
+                                                                              resize_keyboard=True))
         return REC_SOMETHING
 
     else:
@@ -497,7 +500,7 @@ def rec_region(update: Update, _: CallbackContext) -> int:
         reply_keyboard = table
         update.message.reply_text(
             f"Here are some popular destinations for {text}. You can select them to find out more!",
-            reply_markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True),
+            reply_markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, resize_keyboard=True),
         )
         return REC_DESTINATION2
 
@@ -535,7 +538,7 @@ def rec_destination2(update: Update, _: CallbackContext) -> int:
     itineraries = table
     update.message.reply_text(
         f"Here are some itineraries for {text}. You can select them to find out more.",
-        reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True),
+        reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, resize_keyboard=True),
     )
 
     return TOURIST_VIEW
@@ -557,7 +560,7 @@ def tourist_view(update: Update, _: CallbackContext) -> int:
     update.message.reply_text(
         f"Here are the details on {text}:\n\n"
         f"{s}", parse_mode= "Markdown",
-        reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True),
+        reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, resize_keyboard=True),
     )
 
     return TOURIST_SELECT
@@ -578,8 +581,7 @@ def tourist_select(update: Update, _: CallbackContext) -> int:
         reply_keyboard = itineraries
         update.message.reply_text(
             f"Here are some itineraries for {country}. You can select them to find out more.",
-            reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True),
-        )
+            reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, resize_keyboard=True))
 
         return TOURIST_VIEW
 
@@ -596,7 +598,8 @@ def custom_country(update: Update, _: CallbackContext) -> int:
         update.message.reply_text(
             f"Unfortunately we do not have any tours posted for *{text}*. Would you like to search for tours "
             f"for another country, or would you like us to guide you in choosing a country to visit?",
-            parse_mode="Markdown", reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True),
+            parse_mode="Markdown", reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True,
+                                                                    resize_keyboard=True),
         )
         return TOURIST_NO_ITINERARY
 
@@ -625,7 +628,7 @@ def custom_country(update: Update, _: CallbackContext) -> int:
         itineraries = table
         update.message.reply_text(
             f"Here are some itineraries for {text}:",
-            reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True),
+            reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, resize_keyboard=True),
         )
         return TOURIST_VIEW
 
@@ -642,7 +645,7 @@ def tourist_no_itinerary(update: Update, _: CallbackContext) -> int:
                           ["Recommend something for me"]]
         update.message.reply_text(
             "Sure thing! Do you have a region that you want to visit?",
-            reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True),
+            reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, resize_keyboard=True),
         )
         return REC_REGION
 
@@ -680,7 +683,7 @@ def rec_something(update: Update, _: CallbackContext) -> int:
 
         update.message.reply_text(
             "Here are some trending holiday destinations among our users. You can select them to find out more.",
-            reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True),
+            reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, resize_keyboard=True),
         )
         return REC_DESTINATION2
 
@@ -705,7 +708,8 @@ def rec_something_budget(update: Update, _: CallbackContext) -> int:
         update.message.reply_text("Unfortunately, we could not find any tours that fit within your budget. You can "
                                   "instead choose to search for tours based on their popularity or increase your "
                                   "budget. Would you like to search based on popularity or based on budget?",
-                                  reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+                                  reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True,
+                                                                   resize_keyboard=True))
         return REC_SOMETHING
 
     else:
@@ -731,7 +735,7 @@ def rec_something_budget(update: Update, _: CallbackContext) -> int:
 
         update.message.reply_text(
             "Here are the tours that fit within your budget. You can select them to find out more.",
-            reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True),
+            reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, resize_keyboard=True),
         )
         return REC_SOMETHING_BUDGET_VIEW
 
@@ -752,7 +756,7 @@ def rec_something_budget_view(update: Update, _: CallbackContext) -> int:
     update.message.reply_text(
         f"Here are the details on {text}:\n\n"
         f"{s}", parse_mode="Markdown",
-        reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True),
+        reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, resize_keyboard=True),
     )
     return REC_SOMETHING_BUDGET_SELECT
 
@@ -771,7 +775,7 @@ def rec_something_budget_select(update: Update, _: CallbackContext) -> int:
         reply_keyboard = itineraries
         update.message.reply_text(
             f"Here are the tours that fit your budget. You can select them to find out more.",
-            reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True),
+            reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, resize_keyboard=True),
         )
 
         return REC_SOMETHING_BUDGET_VIEW
