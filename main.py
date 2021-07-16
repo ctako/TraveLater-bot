@@ -7,7 +7,7 @@ mydb = myclient["mydatabase"]
 mycol = mydb["itineraries"]
 mydict = {} # for biz adding, edit and remove itinerary
 selected_user = "" # to store username
-itineraries = [] #for "go back" button
+itineraries = []
 country = ""
 
 from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove, Update
@@ -28,9 +28,9 @@ logger = logging.getLogger(__name__)
 
 USERTYPE, REC_DESTINATION1, BIZ_MAIN_MENU, CUSTOM_COUNTRY, REC_REGION, \
 REC_DESTINATION2, TOURIST_VIEW, TOURIST_SELECT, BIZ_VIEW1, BIZ_VIEW2, ADD_COMPANY_NAME, ADD_REGION, \
-ADD_COUNTRY, ADD_TOUR_NAME, ADD_BUDGET, ADD_DURATION, ADD_DESCRIPTION, NEW_ITINERARY_ADDED, BIZ_NO_ITINERARY, \
+ADD_COUNTRY, ADD_TOUR_NAME, ADD_BUDGET, ADD_DURATION, ADD_WEBSITE, ADD_DESCRIPTION, NEW_ITINERARY_ADDED, BIZ_NO_ITINERARY, \
 BIZ_EDIT1, BIZ_EDIT2, BIZ_EDIT3, BIZ_EDIT4, BIZ_REMOVE1, BIZ_REMOVE2, TOURIST_NO_ITINERARY, REC_SOMETHING, \
-REC_SOMETHING_BUDGET, REC_SOMETHING_BUDGET_VIEW, REC_SOMETHING_BUDGET_SELECT = range(30)
+REC_SOMETHING_BUDGET, REC_SOMETHING_BUDGET_VIEW, REC_SOMETHING_BUDGET_SELECT = range(31)
 
 def start(update: Update, _: CallbackContext) -> int:
     reply_keyboard = [["Tourist", "Business Owner"]]
@@ -238,8 +238,8 @@ def biz_edit1(update: Update, _: CallbackContext) -> int:
             continue
         else:
             s += "*" + key + ":* " + str(selected_itinerary.get(key)) + "\n"
-    reply_keyboard = [["Company", "Region"], ["Country", "Tour name"], ["Budget per pax (in USD)", "Duration (in days)"]
-        , ["Description"]]
+    reply_keyboard = [["Company", "Region"], ["Country", "Tour name"], ["Budget per pax (in USD)", "Duration (in days)"],
+                      ["Website", "Description"]]
     update.message.reply_text(
         f"Here is the information we have saved on {text}. \n \n"
         f"{s} \n"
@@ -324,7 +324,7 @@ def biz_edit4(update: Update, _: CallbackContext) -> int:
 
     elif text == "Edit another field for this tour":
         reply_keyboard = [["Company", "Region"], ["Country", "Tour name"],
-                          ["Budget per pax (in USD)", "Duration (in days)"], ["Description"]]
+                          ["Budget per pax (in USD)", "Duration (in days)"], ["Website", "Description"]]
         update.message.reply_text("Which field would you like to edit?",
                                   reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True),
                                   )
@@ -419,10 +419,19 @@ def add_duration(update: Update, _: CallbackContext) -> int:
     text = update.message.text
     logger.info("%s", text)
     mydict["Duration (in days)"] = int(text)
-    update.message.reply_text(f"The duration of your tour will be *{text}* days. Lastly, please give me a description of "
-                              f"your tour. We suggest including information such as places that the tourists will be "
-                              f"visiting, how many hours are allocated for tourists to visit each place, meals that "
-                              f"the tourists will be having etc.", parse_mode="Markdown")
+    update.message.reply_text(f"The duration of your tour will be *{text}* days. Next, please give me the link to "
+                              f"the website where this tour can be found.", parse_mode="Markdown")
+    return ADD_WEBSITE
+
+def add_website(update: Update, _: CallbackContext) -> int:
+    text = update.message.text
+    logger.info("%s", text)
+    mydict["Website"] = text
+    update.message.reply_text(
+        f"This it the link to your website: \n{text} \n\nLastly, please give me a description of "
+        f"your tour. We suggest including information such as places that the tourists will be "
+        f"visiting, how many hours are allocated for tourists to visit each place, meals that "
+        f"the tourists will be having etc.", parse_mode="Markdown")
     return ADD_DESCRIPTION
 
 def add_description(update: Update, _: CallbackContext) -> int:
@@ -546,7 +555,7 @@ def tourist_view(update: Update, _: CallbackContext) -> int:
             s += "*" + key + ":* " + str(result.get(key)) + "\n"
     reply_keyboard = [["Select this itinerary", "Go back"]]
     update.message.reply_text(
-        f"Here are the details on {text}:\n"
+        f"Here are the details on {text}:\n\n"
         f"{s}", parse_mode= "Markdown",
         reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True),
     )
@@ -558,7 +567,7 @@ def tourist_select(update: Update, _: CallbackContext) -> int:
     logger.info("%s", text)
     if text == "Select this itinerary":
         update.message.reply_text(
-            f"Here is the Telegram handle for the person-in-charge. Please contact him for more details!\n@{selected_user}",
+            f"Here is the Telegram handle for the person-in-charge. You can contact him/her for more details!\n@{selected_user}",
             reply_markup=ReplyKeyboardRemove()
         )
         return ConversationHandler.END
@@ -741,7 +750,7 @@ def rec_something_budget_view(update: Update, _: CallbackContext) -> int:
             s += "*" + key + ":* " + str(result.get(key)) + "\n"
     reply_keyboard = [["Select this itinerary", "Go back"]]
     update.message.reply_text(
-        f"Here are the details on {text}:\n"
+        f"Here are the details on {text}:\n\n"
         f"{s}", parse_mode="Markdown",
         reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True),
     )
@@ -752,7 +761,7 @@ def rec_something_budget_select(update: Update, _: CallbackContext) -> int:
     logger.info("%s", text)
     if text == "Select this itinerary":
         update.message.reply_text(
-            f"Here is the Telegram handle for the person-in-charge. Please contact him for more details!\n@{selected_user}",
+            f"Here is the Telegram handle for the person-in-charge. You can contact him for more details!\n@{selected_user}",
             reply_markup=ReplyKeyboardRemove()
         )
         return ConversationHandler.END
@@ -778,7 +787,7 @@ def done(update: Update, _: CallbackContext) -> int:
     return ConversationHandler.END
 
 def main() -> None:
-    updater = Updater("1812880044:AAF2Yjx5HopPKZu35TM5xO_dx096qJJUB8w")
+    updater = Updater("1819142055:AAFEWaUSAn7RZGFQ8qBMFXVqvAlqfspOn2A")
 
     dispatcher = updater.dispatcher
 
@@ -808,7 +817,7 @@ def main() -> None:
             BIZ_VIEW2: [MessageHandler(Filters.regex("^(View other itineraries|Back to main menu)$"), biz_view2)],
             BIZ_EDIT1: [MessageHandler(Filters.text & ~Filters.command, biz_edit1)],
             BIZ_EDIT2: [MessageHandler(Filters.regex("^(Company|Region|Country|Tour name|Budget per pax \(in USD\)|"
-                                                     "Duration \(in days\)|Description)$"), biz_edit2)],
+                                                     "Duration \(in days\)|Website|Description)$"), biz_edit2)],
             BIZ_EDIT3: [MessageHandler(Filters.text & ~Filters.command, biz_edit3)],
             BIZ_EDIT4: [MessageHandler(Filters.regex("^(Edit another field for this tour|Edit another tour|"
                                                      "Back to main menu)$"), biz_edit4)],
@@ -820,6 +829,7 @@ def main() -> None:
             ADD_TOUR_NAME: [MessageHandler(Filters.text & ~Filters.command, add_tour_name)],
             ADD_BUDGET: [MessageHandler(Filters.text & ~Filters.command, add_budget)],
             ADD_DURATION: [MessageHandler(Filters.text & ~Filters.command, add_duration)],
+            ADD_WEBSITE: [MessageHandler(Filters.text & ~Filters.command, add_website)],
             ADD_DESCRIPTION: [MessageHandler(Filters.text & ~Filters.command, add_description)],
         },
         fallbacks=[CommandHandler("done", done)],
