@@ -27,10 +27,11 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 USERTYPE, REC_DESTINATION1, BIZ_MAIN_MENU, CUSTOM_COUNTRY, REC_REGION, \
-REC_DESTINATION2, TOURIST_VIEW, TOURIST_SELECT, BIZ_VIEW1, BIZ_VIEW2, ADD_COMPANY_NAME, ADD_REGION, \
-ADD_COUNTRY, ADD_TOUR_NAME, ADD_BUDGET, ADD_DURATION, ADD_WEBSITE, ADD_DESCRIPTION, NEW_ITINERARY_ADDED, BIZ_NO_ITINERARY, \
-BIZ_EDIT1, BIZ_EDIT2, BIZ_EDIT3, BIZ_EDIT4, BIZ_REMOVE1, BIZ_REMOVE2, TOURIST_NO_ITINERARY, REC_SOMETHING, \
-REC_SOMETHING_BUDGET, REC_SOMETHING_BUDGET_VIEW, REC_SOMETHING_BUDGET_SELECT = range(31)
+    REC_DESTINATION2, TOURIST_VIEW, TOURIST_SELECT, BIZ_VIEW1, BIZ_VIEW2, ADD_COMPANY_NAME, ADD_REGION, \
+    ADD_COUNTRY, ADD_TOUR_NAME, ADD_BUDGET, ADD_DURATION, ADD_WEBSITE, ADD_DESCRIPTION, NEW_ITINERARY_ADDED, \
+    BIZ_NO_ITINERARY,  BIZ_EDIT1, BIZ_EDIT2, BIZ_EDIT3, BIZ_EDIT4, BIZ_REMOVE1, BIZ_REMOVE2, TOURIST_NO_ITINERARY, \
+    REC_SOMETHING, REC_SOMETHING_BUDGET, REC_SOMETHING_DURATION, REC_SOMETHING_BUDGET_DURATION1, \
+    REC_SOMETHING_BUDGET_DURATION2, REC_SOMETHING_VIEW, REC_SOMETHING_SELECT = range(34)
 
 def start(update: Update, _: CallbackContext) -> int:
     reply_keyboard = [["Tourist", "Business Owner"]]
@@ -463,10 +464,12 @@ def rec_region(update: Update, _: CallbackContext) -> int:
     logger.info("%s", text)
 
     if text == "Recommend something for me":
-        reply_keyboard = [["Popularity", "Budget"]]
-        update.message.reply_text("Would you like to search for itineraries based on their popularity or based on their "
-                                  "budget?", reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True,
-                                                                              resize_keyboard=True))
+        reply_keyboard = [["Budget", "Duration"], ["Popularity", "Budget and Duration"]]
+        update.message.reply_text(
+            "How would you like to search for itineraries? You can choose to search for them based on a specified budget "
+            "only, a specified duration only, popularity among our users or a combination of both a specified budget "
+            "and duration.",
+            reply_markup=ReplyKeyboardMarkup(reply_keyboard,one_time_keyboard=True, resize_keyboard=True))
         return REC_SOMETHING
 
     else:
@@ -692,6 +695,16 @@ def rec_something(update: Update, _: CallbackContext) -> int:
                                   "within your budget.")
         return REC_SOMETHING_BUDGET
 
+    elif text == "Duration":
+        update.message.reply_text("Please state your desired duration of stay. We will search for tours that are "
+                                  "within the specified duration.")
+        return REC_SOMETHING_DURATION
+
+    elif text == "Budget and Duration":
+        update.message.reply_text("Please state your maximum budget per pax in USD. We will search for tours that are "
+                                  "within your budget.")
+        return REC_SOMETHING_BUDGET_DURATION1
+
 def rec_something_budget(update: Update, _: CallbackContext) -> int:
     text = update.message.text
     logger.info("%s", text)
@@ -704,10 +717,10 @@ def rec_something_budget(update: Update, _: CallbackContext) -> int:
         results_lst.append(result)
 
     if len(results_lst) == 0:
-        reply_keyboard = [["Popularity", "Budget"]]
+        reply_keyboard = [["Budget", "Duration"], ["Popularity", "Budget and Duration"]]
         update.message.reply_text("Unfortunately, we could not find any tours that fit within your budget. You can "
-                                  "instead choose to search for tours based on their popularity or increase your "
-                                  "budget. Would you like to search based on popularity or based on budget?",
+                                  "instead increase your budget or choose one of the other options offered. How would "
+                                  "you like to search for itineraries?",
                                   reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True,
                                                                    resize_keyboard=True))
         return REC_SOMETHING
@@ -737,9 +750,111 @@ def rec_something_budget(update: Update, _: CallbackContext) -> int:
             "Here are the tours that fit within your budget. You can select them to find out more.",
             reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, resize_keyboard=True),
         )
-        return REC_SOMETHING_BUDGET_VIEW
+        return REC_SOMETHING_VIEW
 
-def rec_something_budget_view(update: Update, _: CallbackContext) -> int:
+def rec_something_duration(update: Update, _: CallbackContext) -> int:
+    text = update.message.text
+    logger.info("%s", text)
+    text = int(text)
+    myquery = {"Duration (in days)": {"$lte": text}}
+    results = mycol.find(myquery)
+    results_lst = []
+    for result in results:
+        results_lst.append(result)
+
+    if len(results_lst) == 0:
+        reply_keyboard = [["Budget", "Duration"], ["Popularity", "Budget and Duration"]]
+        update.message.reply_text("Unfortunately, we could not find any tours that fit within your specified duration. "
+                                  "You can instead increase the duration or choose one of the other options offered. "
+                                  "How would you like to search for itineraries?",
+                                  reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True,
+                                                                   resize_keyboard=True))
+        return REC_SOMETHING
+
+    else:
+        table = []
+        row = []
+        sorting = []
+        for doc in results_lst:
+            sorting.append(doc.get("Tour name"))
+        sorting.sort()
+        for tour_name in sorting:
+            if len(row) < 2:
+                row.append(tour_name)
+
+            else:
+                dup_row = copy.deepcopy(row)
+                table.append(dup_row)
+                row.clear()
+                row.append(tour_name)
+        table.append(row)
+        reply_keyboard = table
+        global itineraries
+        itineraries = reply_keyboard
+
+        update.message.reply_text(
+            "Here are the tours that fit within your duration. You can select them to find out more.",
+            reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, resize_keyboard=True),
+        )
+        return REC_SOMETHING_VIEW
+
+def rec_something_budget_duration1(update: Update, _: CallbackContext) -> int:
+    text = update.message.text
+    logger.info("%s", text)
+    global mydict
+    mydict["Budget"] = int(text)
+    update.message.reply_text(f"Your budget is *USD{text}*. Please state your desired duration of stay. We will search"
+                              f" for tours that are within the specified duration", parse_mode="Markdown")
+    return REC_SOMETHING_BUDGET_DURATION2
+
+def rec_something_budget_duration2(update: Update, _: CallbackContext) -> int:
+    text = update.message.text
+    logger.info("%s", text)
+    global mydict
+    results = mycol.find({"$and": [{"Budget per pax (in USD)": {"$lte": mydict.get("Budget")}},
+                         {"Duration (in days)": {"$lte": int(text)}}]})
+    mydict.clear()
+    results_lst = []
+    for result in results:
+        results_lst.append(result)
+
+    if len(results_lst) == 0:
+        reply_keyboard = [["Budget", "Duration"], ["Popularity", "Budget and Duration"]]
+        update.message.reply_text("Unfortunately, we could not find any tours that fit within your specified budget and "
+                                  "duration. You can instead increase the budget and/or duration or choose one of the "
+                                  "other options offered. How would you like to search for itineraries?",
+                                  reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True,
+                                                                   resize_keyboard=True))
+        return REC_SOMETHING
+
+    else:
+        table = []
+        row = []
+        sorting = []
+        for doc in results_lst:
+            sorting.append(doc.get("Tour name"))
+        sorting.sort()
+        for tour_name in sorting:
+            if len(row) < 2:
+                row.append(tour_name)
+
+            else:
+                dup_row = copy.deepcopy(row)
+                table.append(dup_row)
+                row.clear()
+                row.append(tour_name)
+        table.append(row)
+        reply_keyboard = table
+        global itineraries
+        itineraries = reply_keyboard
+
+        update.message.reply_text(
+            "Here are the tours that fit within your budget and duration. You can select them to find out more.",
+            reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, resize_keyboard=True),
+        )
+        return REC_SOMETHING_VIEW
+
+def rec_something_view(update: Update, _: CallbackContext) -> int:
     text = update.message.text
     logger.info("%s", text)
     myquery = {"Tour name": text}
@@ -758,9 +873,9 @@ def rec_something_budget_view(update: Update, _: CallbackContext) -> int:
         f"{s}", parse_mode="Markdown",
         reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, resize_keyboard=True),
     )
-    return REC_SOMETHING_BUDGET_SELECT
+    return REC_SOMETHING_SELECT
 
-def rec_something_budget_select(update: Update, _: CallbackContext) -> int:
+def rec_something_select(update: Update, _: CallbackContext) -> int:
     text = update.message.text
     logger.info("%s", text)
     if text == "Select this itinerary":
@@ -778,7 +893,7 @@ def rec_something_budget_select(update: Update, _: CallbackContext) -> int:
             reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, resize_keyboard=True),
         )
 
-        return REC_SOMETHING_BUDGET_VIEW
+        return REC_SOMETHING_VIEW
 
 def done(update: Update, _: CallbackContext) -> int:
     user = update.message.from_user
@@ -803,11 +918,17 @@ def main() -> None:
                                               rec_destination1)],
             REC_REGION: [MessageHandler(Filters.regex("^(Africa|Asia|Australia|Europe|North America|"
                                                         "South America|Recommend something for me)$"), rec_region)],
-            REC_SOMETHING: [MessageHandler(Filters.regex("^(Popularity|Budget)$"), rec_something)],
+            REC_SOMETHING: [MessageHandler(Filters.regex("^(Budget|Duration|Popularity|Budget and Duration)$"),
+                                           rec_something)],
             REC_SOMETHING_BUDGET: [MessageHandler(Filters.text & ~Filters.command, rec_something_budget)],
-            REC_SOMETHING_BUDGET_VIEW: [MessageHandler(Filters.text & ~Filters.command, rec_something_budget_view)],
-            REC_SOMETHING_BUDGET_SELECT: [MessageHandler(Filters.regex("^(Select this itinerary|Go back)$"),
-                                                         rec_something_budget_select)],
+            REC_SOMETHING_DURATION: [MessageHandler(Filters.text & ~Filters.command, rec_something_duration)],
+            REC_SOMETHING_BUDGET_DURATION1: [MessageHandler(Filters.text & ~Filters.command,
+                                                            rec_something_budget_duration1)],
+            REC_SOMETHING_BUDGET_DURATION2: [MessageHandler(Filters.text & ~Filters.command,
+                                                            rec_something_budget_duration2)],
+            REC_SOMETHING_VIEW: [MessageHandler(Filters.text & ~Filters.command, rec_something_view)],
+            REC_SOMETHING_SELECT: [MessageHandler(Filters.regex("^(Select this itinerary|Go back)$"),
+                                                  rec_something_select)],
             REC_DESTINATION2: [MessageHandler(Filters.text & ~Filters.command,
                                               rec_destination2)],
             TOURIST_SELECT: [MessageHandler(Filters.regex("^(Select this itinerary|Go back)$"), tourist_select)],
