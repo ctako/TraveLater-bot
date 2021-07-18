@@ -1,6 +1,7 @@
 import logging
 import pymongo
 import copy
+from country_list import countries_for_language
 
 myclient = pymongo.MongoClient("mongodb://localhost:27017/")
 mydb = myclient["mydatabase"]
@@ -9,6 +10,11 @@ mydict = {} # for biz adding, edit and remove itinerary
 selected_user = "" # to store username
 itineraries = []
 country = ""
+countries = []
+countries_dict = dict(countries_for_language('en'))
+for i in countries_dict.values():
+    countries.append(i)
+regions = ["Europe", "Asia", "North America", "South America", "Oceania", "Africa", "Antarctica"]
 
 from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove, Update
 from telegram.ext import (
@@ -76,8 +82,8 @@ def rec_destination1(update: Update, _: CallbackContext) -> int:
         return CUSTOM_COUNTRY
 
     else:
-        reply_keyboard = [["Africa", "Asia"], ["Australia", "Europe"], ["North America",
-                          "South America"], ["Recommend something for me"]]
+        reply_keyboard = [["Africa", "Antarctica"], ["Asia", "Europe"], ["North America",
+                          "South America"], ["Oceania","Recommend something for me"]]
 
         update.message.reply_text(
             "No worries! Do you have a region that you want to visit?",
@@ -389,18 +395,26 @@ def add_company_name(update: Update, _: CallbackContext) -> int:
 def add_region(update: Update, _: CallbackContext) -> int:
     text = update.message.text
     logger.info("%s", text)
-    mydict["Region"] = text
-    update.message.reply_text(f"Your tour will be held in *{text}*. Next, please tell me which country your tour will be "
-                              f"held in.", parse_mode="Markdown")
-    return ADD_COUNTRY
+    if text in regions:
+        mydict["Region"] = text
+        update.message.reply_text(f"Your tour will be held in *{text}*. Next, please tell me which country your tour will be "
+                                f"held in.", parse_mode="Markdown")
+        return ADD_COUNTRY
+    else:
+        update.message.reply_text(f"Please enter a valid region (i.e. Africa, Antarctica, Asia, Europe, North America, South America, Oceania).", parse_mode="Markdown")
+        return ADD_REGION
 
 def add_country(update: Update, _: CallbackContext) -> int:
     text = update.message.text
     logger.info("%s", text)
-    mydict["Country"] = text
-    update.message.reply_text(f"Your tour will be held in *{text}*. Next, please tell me the name of your tour.",
-                              parse_mode="Markdown")
-    return ADD_TOUR_NAME
+    if text in countries:
+        mydict["Country"] = text
+        update.message.reply_text(f"Your tour will be held in *{text}*. Next, please tell me the name of your tour.",
+                                parse_mode="Markdown")
+        return ADD_TOUR_NAME
+    else:
+        update.message.reply_text(f"Please enter a valid country.", parse_mode="Markdown")
+        return ADD_COUNTRY
 
 def add_tour_name(update: Update, _: CallbackContext) -> int:
     text = update.message.text
