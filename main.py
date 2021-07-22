@@ -32,12 +32,12 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-USERTYPE, REC_DESTINATION1, BIZ_MAIN_MENU, CUSTOM_COUNTRY1, CUSTOM_COUNTRY2, CUSTOM_COUNTRY_BUDGET, \
-CUSTOM_COUNTRY_DURATION, REC_REGION1, REC_DESTINATION2, TOURIST_VIEW, TOURIST_SELECT, BIZ_VIEW1, BIZ_VIEW2, \
+USERTYPE, REC_DESTINATION, BIZ_MAIN_MENU, CUSTOM_COUNTRY1, CUSTOM_COUNTRY2, CUSTOM_COUNTRY_BUDGET, \
+CUSTOM_COUNTRY_DURATION, REC_REGION1, TOURIST_VIEW, TOURIST_SELECT, BIZ_VIEW1, BIZ_VIEW2, \
 ADD_COMPANY_NAME, ADD_REGION, ADD_COUNTRY, ADD_TOUR_NAME, ADD_BUDGET, ADD_DURATION, ADD_WEBSITE, ADD_DESCRIPTION, \
 NEW_ITINERARY_ADDED, BIZ_NO_ITINERARY, BIZ_EDIT1, BIZ_EDIT2, BIZ_EDIT3, BIZ_EDIT4, BIZ_REMOVE1, BIZ_REMOVE2, \
 TOURIST_NO_ITINERARY, REC_SOMETHING, REC_SOMETHING_BUDGET, REC_SOMETHING_DURATION, REC_SOMETHING_BUDGET_DURATION1, \
-REC_SOMETHING_BUDGET_DURATION2, CUSTOM_COUNTRY_BUDGET_DURATION1, CUSTOM_COUNTRY_BUDGET_DURATION2, REC_REGION2 = range(38)
+REC_SOMETHING_BUDGET_DURATION2, CUSTOM_COUNTRY_BUDGET_DURATION1, CUSTOM_COUNTRY_BUDGET_DURATION2, REC_REGION2 = range(37)
 
 def start(update: Update, _: CallbackContext) -> int:
     reply_keyboard = [["Tourist", "Business Owner"]]
@@ -61,7 +61,7 @@ def usertype(update: Update, _: CallbackContext) -> int:
             "Welcome traveller! Do you have a specific country that you wish to visit?",
             reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, resize_keyboard=True),
         )
-        return REC_DESTINATION1
+        return REC_DESTINATION
 
     else:
         reply_keyboard = [["View my itineraries", "Add an itinerary"],
@@ -500,22 +500,6 @@ def rec_region2(update: Update, _: CallbackContext) -> int:
         )
         return CUSTOM_COUNTRY1
 
-def rec_destination2(update: Update, _: CallbackContext) -> int:
-    text = update.message.text
-    logger.info("%s", text)
-    myquery = {"Country": text}
-    results_lst = cursor_to_list(myquery)
-    reply_keyboard = list_to_keyboard(results_lst)
-    global country
-    country = text
-    global itineraries
-    itineraries = reply_keyboard
-    update.message.reply_text(
-        f"Here are some itineraries for *{text}*. You can select them to find out more.", parse_mode="Markdown",
-        reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, resize_keyboard=True),
-    )
-    return TOURIST_VIEW
-
 def tourist_view(update: Update, _: CallbackContext) -> int:
     text = update.message.text
     logger.info("%s", text)
@@ -764,7 +748,7 @@ def rec_something(update: Update, _: CallbackContext) -> int:
             "Here are some trending holiday destinations among our users. You can select them to find out more.",
             reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, resize_keyboard=True),
         )
-        return REC_DESTINATION2
+        return CUSTOM_COUNTRY1
 
     elif text == "Budget":
         update.message.reply_text("Please state your maximum budget per pax in USD. We will search for tours that are "
@@ -927,8 +911,8 @@ def main() -> None:
         entry_points=[CommandHandler("start", start)],
         states={
             USERTYPE: [MessageHandler(Filters.regex("^(Tourist|Business Owner)$"), usertype)],
-            REC_DESTINATION1: [MessageHandler(Filters.regex("^(Yes|No)$"),
-                                              rec_destination1)],
+            REC_DESTINATION: [MessageHandler(Filters.regex("^(Yes|No)$"),
+                                             rec_destination1)],
             REC_REGION1: [MessageHandler(Filters.regex("^(Africa|Asia|Australia|Antarctica|Europe|North America|"
                                                         "South America|Oceania|Recommend something for me)$"), rec_region1)],
             REC_REGION2: [MessageHandler(Filters.regex("^(View all results|View by countries|"
@@ -941,8 +925,6 @@ def main() -> None:
                                                             rec_something_budget_duration1)],
             REC_SOMETHING_BUDGET_DURATION2: [MessageHandler(Filters.text & ~Filters.command,
                                                             rec_something_budget_duration2)],
-            REC_DESTINATION2: [MessageHandler(Filters.text & ~Filters.command,
-                                              rec_destination2)],
             TOURIST_SELECT: [MessageHandler(Filters.regex("^(Select this itinerary|Go back)$"), tourist_select)],
             TOURIST_VIEW: [MessageHandler(Filters.text & ~Filters.command, tourist_view)],
             CUSTOM_COUNTRY1: [MessageHandler(Filters.text & ~Filters.command, custom_country1)],
