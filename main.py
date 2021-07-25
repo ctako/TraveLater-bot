@@ -403,7 +403,7 @@ def rec_region1(update: Update, _: CallbackContext) -> int:
             reply_keyboard = [["Africa", "Antarctica"], ["Asia", "Europe"], ["North America", "South America"],
                               ["Oceania", "Recommend something for me"]]
             update.message.reply_text(
-                f"Unfortunately,we do not have any itineraries for the *{text}*. You can try selecting another region or "
+                f"Unfortunately, we do not have any itineraries for *{text}*. You can try selecting another region or "
                 f"we could recommend something for you. Which region would you like to visit?", parse_mode="Markdown",
                 reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, resize_keyboard=True)
             )
@@ -544,7 +544,7 @@ def custom_country1(update: Update, _: CallbackContext) -> int:
     if len(results_lst) == 0:
         reply_keyboard = [["Search for another country", "Guide me"]]
         update.message.reply_text(
-            f"Unfortunately we do not have any tours posted for *{text}*. Would you like to search for tours "
+            f"Unfortunately, we do not have any tours posted for *{text}*. Would you like to search for tours "
             f"for another country, or would you like us to guide you in choosing a country to visit?",
             parse_mode="Markdown", reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True,
                                                                     resize_keyboard=True),
@@ -705,8 +705,10 @@ def tourist_no_itinerary(update: Update, _: CallbackContext) -> int:
         return CUSTOM_COUNTRY1
 
     elif text == "Guide me":
-        reply_keyboard = [["Africa", "Asia"], ["Australia", "Europe"], ["North America", "South America"],
-                          ["Recommend something for me"]]
+        global mydict
+        mydict.clear()
+        reply_keyboard = [["Africa", "Antarctica"], ["Asia", "Europe"], ["North America",
+                          "South America"], ["Oceania", "Recommend something for me"]]
         update.message.reply_text(
             "Sure thing! Do you have a region that you want to visit?",
             reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, resize_keyboard=True),
@@ -857,6 +859,8 @@ def rec_something_budget_duration2(update: Update, _: CallbackContext) -> int:
         return TOURIST_VIEW
 
 def done(update: Update, _: CallbackContext) -> int:
+    global mydict
+    mydict.clear()
     user = update.message.from_user
     logger.info("User %s ended the conversation.", user.first_name)
     update.message.reply_text(
